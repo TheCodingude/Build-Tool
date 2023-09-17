@@ -6,8 +6,13 @@
 using namespace std;
 
 
-void find_file(){
-    char line[50];
+void execute_command(char* command){
+    if(system(command) != 0){
+        cerr << "Unable to run command: " << command << endl; 
+    } 
+}
+
+void read_file(){
     FILE *file = fopen("BUILD", "r");
 
     if (file == NULL){
@@ -15,12 +20,22 @@ void find_file(){
         exit(1);
     }
 
-    
+    char buffer[1024]; // A buffer to hold the read data
 
+    while (fgets(buffer, sizeof(buffer), file) != nullptr) {
+
+        // cout << buffer << endl;
+        execute_command(buffer);
+    }
+    cout << buffer;
+        // Close the file when done
+    fclose(file);
+
+    // chatgpt is our friend :)
 }
 
 
 
 int main(){
-    find_file();
+    read_file();
 }
