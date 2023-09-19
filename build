@@ -1,9 +1,6 @@
 [WINDOWS]
 mkdir fudge
 
+
 [LINUX]
-touch fudge
-
-[END]
-
-
+touch me
