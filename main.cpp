@@ -17,7 +17,7 @@ string convertToString(char* a, int size)
 {
     int i;
     string s = "";
-    for (i = 0; i < size; i++) {
+    for (i = 0; i <= size; i++) {
         s = s + a[i];
     }
     return s;
@@ -35,20 +35,20 @@ string CHECK_OS(){
 }
 
 string removeNewlines(char* line) {
-    char newstr[999];
+    int size = sizeof(line);
+    char newstr[size];
     int index = 0;
-    int size = sizeof(line) - 1;
     int smth = 0;
 
-    while(index < size){
-        if (line[index] == '\n' || line[index] == '\r'){
-            cout << "IN" << endl;
+    while(index <= size){
+        if (line[index] == '\n' || line[index] == '\r' || line[index] == ' '){
             index++;
         }
         else{
             newstr[index] = line[index];
+            index++;
         }
-        index++;
+        
     }
 
     string line_a = convertToString(newstr, sizeof(newstr));
@@ -69,35 +69,39 @@ void read_file(){
     }
 
     string os = CHECK_OS();
-    // bool in_os_only = false;
     string os_tag = "none";
 
     char buffer[1024]; // A buffer to hold the read data
 
-    
+
 
     while (fgets(buffer, sizeof(buffer), file) != nullptr) {
 
 
         string line = removeNewlines(buffer);
         
-        
 
-        if (line == "[WINDOWS]"){ // CHECK IF CURRENTLY IN OS SECTION AND WHICH OS IT IS
-            cout << "PLEASE CUM IN HERE" << endl;
+
+        string winline = line.substr(0, 9);
+        string linuxline = line.substr(0, 7);
+        string macline = line.substr(0, 5);
+
+
+        if (winline == "[WINDOWS]"){ // CHECK IF CURRENTLY IN OS SECTION AND WHICH OS IT IS
             os_tag = "windows";
         }
-        else if(line == "[LINUX]"){
+        else if(linuxline == "[LINUX]"){
             os_tag = "linux";
         }
-        else if(line == "[MAC]"){
+        else if(macline == "[MAC]"){
             os_tag = "macintosh";
-        }
-        else if(line == "[END]"){
+        }   
+        else if(macline == "[END]"){
             os_tag = "none";
         }
         else if (os_tag != "none"){
             if(os_tag == os){
+                
                 execute_command(buffer);
             }
         }
