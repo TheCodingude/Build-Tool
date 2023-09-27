@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <algorithm>
 #include <string.h>
 
 using namespace std;
@@ -80,7 +79,9 @@ void read_file(){
 
         string line = removeNewlines(buffer);
         
-
+        if(line.substr(0, 2) == "//"){
+            continue;
+        }
 
         string winline = line.substr(0, 9);
         string linuxline = line.substr(0, 7);
@@ -96,7 +97,7 @@ void read_file(){
         else if(macline == "[MAC]"){
             os_tag = "macintosh";
         }   
-        else if(macline == "[END]"){
+        else if(macline == "[END]"){ // this was is also mac line just because they're the same length lol
             os_tag = "none";
         }
         else if (os_tag != "none"){
@@ -104,6 +105,10 @@ void read_file(){
                 
                 execute_command(buffer);
             }
+            else{
+                continue;
+            }
+            
         }
         else{
             execute_command(buffer);
