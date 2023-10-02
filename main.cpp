@@ -9,6 +9,15 @@ using namespace std;
 
 map<string, string> variables;
 
+void build_error(string error){
+    cout << "BUILD ERROR: " << error << endl;
+    exit(1);
+}
+
+void build_warning(string warning){
+    cout << "BUILD WARNING: " << warning << endl;
+} 
+
 void execute_command(char* command){
     if(system(command) != 0){
         cerr << "Unable to run command: " << command << endl; 
@@ -25,13 +34,13 @@ string CHECK_OS(){
     #endif
 }
 
-string removeNewlines(char* line) {
+string removeNewlines(string line) {
     int size = sizeof(line);
     char newstr[size];
     int index = 0;
 
     while(index <= size){
-        if (line[index] == '\n' || line[index] == '\r' || line[index] == ' '){
+        if (line[index] == '\n' || line[index] == '\r\n' || line[index] == ' '){
             index++;
         }
         else{
@@ -46,9 +55,16 @@ string removeNewlines(char* line) {
 }
 
 
-char find_var(string line, int location){
-    cout << line << endl;
-    cout << location << endl;
+void find_var(string line, int loe){ // loe = location of equals
+    string name;
+    string data;
+    name = removeNewlines(line.substr(0, loe));
+    int first = line.find('"') + 1;
+    int second = line.find('"', first);
+    data = line.substr(first, second-first);
+    variables[name] = data;
+
+    cout << variables[name] << endl;
 }
 
 
@@ -62,7 +78,6 @@ void read_file(){
         exit(1);
     }
 
-    bool flags_exist = false;
     string os = CHECK_OS();
     string os_tag = "none";
 
@@ -98,7 +113,6 @@ void read_file(){
             os_tag = "none";
         }
         else if(equal <= sizeof(line) && equal >= 0){
-            cout << '?' << endl;
             find_var(line, equal);
         }
         else if (os_tag != "none"){
