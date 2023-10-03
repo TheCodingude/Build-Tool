@@ -3,11 +3,14 @@
 #include <string>
 #include <string.h>
 #include <map>
-
+#include <vector>
+#include <sstream>
 
 using namespace std;
 
 map<string, string> variables;
+vector<string> keys; 
+
 
 void build_error(string error){
     cout << "BUILD ERROR: " << error << endl;
@@ -33,6 +36,25 @@ string CHECK_OS(){
         return "macintosh";
     #endif
 }
+
+vector<string> split(string input, char delimiter = ' ') {
+    
+    stringstream ss(input);
+
+    vector<string> tokens;
+
+    string token; 
+
+    while (getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
+
+
+
+
 
 string removeNewlines(string line) {
     int size = sizeof(line);
@@ -63,11 +85,33 @@ void find_var(string line, int loe){ // loe = location of equals
     int second = line.find('"', first);
     data = line.substr(first, second-first);
     variables[name] = data;
-
-    cout << variables[name] << endl;
+    keys.push_back(name);
 }
 
+bool check_if_var(string line){
+    string newline = "";
+    bool found = false;
+    bool already_found = false;
+    vector<string> tokens = split(line);
+    for (const std::string& token : tokens) {
+        for(string i : keys){
+            if(i == token){
+                already_found = true;
+                newline = newline + ' ' + variables[token];
+                found = true;
+                continue;
+            }else{
+                found = false;
+            }
+        }
+        if(!found && already_found == false){
+            newline = newline + ' ' + token;
+        }
+    }
+    cout << newline << endl;
 
+
+}
 
 void read_file(){
     // fopen is better idc
@@ -126,12 +170,9 @@ void read_file(){
             
         }
         else{
-            execute_command(buffer);
+            check_if_var(buffer);
         }
 
-
-
-        
     }
 
     // Close the file when done
