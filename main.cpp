@@ -9,7 +9,7 @@
 using namespace std;
 
 map<string, string> variables;
-vector<string> keys; 
+ 
 
 
 void build_error(string error){
@@ -35,6 +35,14 @@ string CHECK_OS(){
     #elif __APPLE__
         return "macintosh";
     #endif
+}
+
+vector<string> get_keys(){
+    std::vector<string> keys;
+    for(map<string,string>::iterator it = variables.begin(); it != variables.end(); ++it) {
+        keys.push_back(it->first);
+    }
+    return keys;
 }
 
 vector<string> split(string input, char delimiter = ' ') {
@@ -80,22 +88,25 @@ string removeNewlines(string line) {
 void find_var(string line, int loe){ // loe = location of equals
     string name;
     string data;
-    name = line.substr(0, loe-1);
+    name = line.substr(0, loe);
     int first = line.find('"') + 1;
     int second = line.find('"', first);
     data = line.substr(first, second-first);
     variables[name] = data;
-    keys.push_back(name);
 }
 
 void check_if_var(string line){
     string newline = "";
     bool found = false;
     bool already_found = false;
+    vector<string> keys = get_keys();
     vector<string> tokens = split(line);
-    for (const string& token : tokens) {
-        for(string i : keys){
-            if(i == token){
+    for (string token : tokens) {
+        for(string key : keys){
+            // cout << "token: " << token << endl;
+            // cout << "i: " << i << endl;
+            if(key == token){
+                cout << "?" << endl;
                 already_found = true;
                 newline = newline + ' ' + variables[token];
                 found = true;
@@ -159,6 +170,7 @@ void read_file(){
             os_tag = "none";
         }
         else if(equal <= sizeof(line) && equal >= 0){
+            cout << '?' << endl;
             find_var(line, equal);
         }
         else if (os_tag != "none"){
