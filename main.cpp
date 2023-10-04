@@ -21,7 +21,7 @@ void build_warning(string warning){
     cout << "BUILD WARNING: " << warning << endl;
 } 
 
-void execute_command(char* command){
+void execute_command(const char* command){
     if(system(command) != 0){
         cerr << "Unable to run command: " << command << endl; 
     } 
@@ -62,7 +62,7 @@ string removeNewlines(string line) {
     int index = 0;
 
     while(index <= size){
-        if (line[index] == '\n' || line[index] == '\r\n' || line[index] == ' '){
+        if (line[index] == '\n' || line[index] == '\r' || line[index] == ' '){
             index++;
         }
         else{
@@ -80,7 +80,7 @@ string removeNewlines(string line) {
 void find_var(string line, int loe){ // loe = location of equals
     string name;
     string data;
-    name = removeNewlines(line.substr(0, loe));
+    name = line.substr(0, loe-1);
     int first = line.find('"') + 1;
     int second = line.find('"', first);
     data = line.substr(first, second-first);
@@ -88,12 +88,12 @@ void find_var(string line, int loe){ // loe = location of equals
     keys.push_back(name);
 }
 
-bool check_if_var(string line){
+void check_if_var(string line){
     string newline = "";
     bool found = false;
     bool already_found = false;
     vector<string> tokens = split(line);
-    for (const std::string& token : tokens) {
+    for (const string& token : tokens) {
         for(string i : keys){
             if(i == token){
                 already_found = true;
@@ -104,11 +104,13 @@ bool check_if_var(string line){
                 found = false;
             }
         }
-        if(!found && already_found == false){
+        if(!found && !already_found){
             newline = newline + ' ' + token;
         }
     }
-    cout << newline << endl;
+    
+    
+    execute_command(newline.c_str());
 
 
 }
@@ -162,7 +164,7 @@ void read_file(){
         else if (os_tag != "none"){
             if(os_tag == os){
                 
-                execute_command(buffer);
+                check_if_var(buffer);
             }
             else{
                 continue;
