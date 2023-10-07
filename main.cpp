@@ -5,12 +5,21 @@
 #include <map>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 
 using namespace std;
 
 map<string, string> variables;
  
-
+string CHECK_OS(){
+    #ifdef _WIN32
+        return "windows";
+    #elif __linux__
+        return "linux";
+    #elif __APPLE__
+        return "macintosh";
+    #endif
+}
 
 void build_error(string error){
     cout << "BUILD ERROR: " << error << endl;
@@ -27,20 +36,17 @@ void execute_command(const char* command){
     } 
 }
 
-string CHECK_OS(){
-    #ifdef _WIN32
-        return "windows";
-    #elif __linux__
-        return "linux";
-    #elif __APPLE__
-        return "macintosh";
-    #endif
+string removeWhitespace(string input) {
+    input.erase(remove_if(input.begin(), input.end(), ::isspace), input.end());
+    return input;
 }
+
+
 
 vector<string> get_keys(){
     std::vector<string> keys;
     for(map<string,string>::iterator it = variables.begin(); it != variables.end(); ++it) {
-        keys.push_back(it->first);
+        keys.push_back(removeWhitespace(it->first));
     }
     return keys;
 }
@@ -54,11 +60,12 @@ vector<string> split(string input, char delimiter = ' ') {
     string token; 
 
     while (getline(ss, token, delimiter)) {
-        tokens.push_back(token);
+        tokens.push_back(removeWhitespace(token));
     }
 
     return tokens;
 }
+
 
 
 
@@ -70,7 +77,7 @@ string removeNewlines(string line) {
     int index = 0;
 
     while(index <= size){
-        if (line[index] == '\n' || line[index] == '\r' || line[index] == ' '){
+        if (line[index] == '\n' || line[index] == '\r'){
             index++;
         }
         else{
@@ -88,7 +95,7 @@ string removeNewlines(string line) {
 void find_var(string line, int loe){ // loe = location of equals
     string name;
     string data;
-    name = line.substr(0, loe);
+    name = line.substr(0, loe-1);
     int first = line.find('"') + 1;
     int second = line.find('"', first);
     data = line.substr(first, second-first);
@@ -102,11 +109,10 @@ void check_if_var(string line){
     vector<string> keys = get_keys();
     vector<string> tokens = split(line);
     for (string token : tokens) {
+        already_found = false;
         for(string key : keys){
-            // cout << "token: " << token << endl;
-            // cout << "i: " << i << endl;
+            
             if(key == token){
-                cout << "?" << endl;
                 already_found = true;
                 newline = newline + ' ' + variables[token];
                 found = true;
@@ -170,7 +176,6 @@ void read_file(){
             os_tag = "none";
         }
         else if(equal <= sizeof(line) && equal >= 0){
-            cout << '?' << endl;
             find_var(line, equal);
         }
         else if (os_tag != "none"){
@@ -194,7 +199,6 @@ void read_file(){
 
     // chatgpt is our friend :)
 }
-
 
 
 int main(int argc, char** argv){
