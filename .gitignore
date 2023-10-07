@@ -1,10 +1,9 @@
 BUILD
 .vscode
-something.txt
 build
 build.exe
-something.txt?
 test
 test.cpp
-map.cpp
-pickle
+GOAL
+
+
