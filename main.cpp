@@ -22,7 +22,7 @@ string CHECK_OS(){
 }
 
 void build_error(string error){
-    cout << "BUILD ERROR: " << error << endl;
+    cerr << "BUILD ERROR: " << error << endl;
     exit(1);
 }
 
@@ -30,7 +30,25 @@ void build_warning(string warning){
     cout << "BUILD WARNING: " << warning << endl;
 } 
 
+void build_info(string info){
+    // cout << "----------------" << endl;
+    cout << "[BUILD INFO]: " << info << endl;
+    // cout << "----------------" << endl;
+}
+
+bool containsOnlyBlanks(const std::string& line) { return std::all_of(line.begin(), line.end(), [](char c) { return c == ' ' || c == '\t' || c == '\n'; }); }
+
+inline bool ends_with(std::string const & value, std::string const & ending){
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
+
 void execute_command(const char* command){
+    if (!containsOnlyBlanks(command)){
+        string c = command;
+        build_info("Running " + c);
+    }
     if(system(command) != 0){
         cerr << "Unable to run command: " << command << endl; 
     } 
@@ -65,11 +83,6 @@ vector<string> split(string input, char delimiter = ' ') {
 
     return tokens;
 }
-
-
-
-
-
 
 string removeNewlines(string line) {
     int size = sizeof(line);
@@ -132,27 +145,55 @@ void check_if_var(string line){
 
 }
 
-void read_file(){
+
+string check_for_flags(string line){
+    int exists = line.find("-");
+    if (exists < sizeof(line) && exists >= 0){
+        return line.substr(exists+1, sizeof(line) + 1);
+    } else{
+        return "nah fam";
+    }
+}
+
+void read_file(const char* filename = "BUILD", bool look = false){
     // fopen is better idc
-    FILE *file = fopen("BUILD", "r");
+
+    string flag = "nah fam";
+    FILE *file;
+
+    if (look){
+        flag = check_for_flags(filename);
+        if (flag == "nah fam"){
+            file = fopen(filename, "r");
+        } else{
+            file = fopen("BUILD", "r");
+        }
+    } else {
+        file = fopen("BUILD", "r");
+    }
+
+    flag += ':';
 
     if (file == NULL){
-        cerr << "File 'BUILD' does not exist or there was another issue\n";
+        cerr << "File " << filename << " does not exist or there was another issue\n";
         exit(1);
     }
+
 
     string os = CHECK_OS();
     string os_tag = "none";
 
     char buffer[1024]; // A buffer to hold the read data
 
+    bool in_section = false;
+    
 
 
     while (fgets(buffer, sizeof(buffer), file) != nullptr) {
 
-
         string line = removeNewlines(buffer);
-        
+     
+
         if(line.substr(0, 2) == "//"){
             continue;   
         }
@@ -162,6 +203,30 @@ void read_file(){
         string macline = line.substr(0, 5);
         line = (string) buffer;
         int equal = line.find("=");
+
+        if (containsOnlyBlanks(line)){
+            continue;
+        }
+
+        
+        int flag_len = flag.size();
+
+        string flig = line.substr(0, flag_len);
+        if(flag != "nah fam:"){
+            // cout << "F: " << flag << endl;
+            if(flig == flag && in_section == false){
+                in_section = true;
+                continue;
+            }
+            if(!in_section){
+                continue;
+            }
+        }else if(ends_with(line, ":\n")){       // proably not the best way to do this but if it aint broke dont fix it
+            exit(0);
+        }
+
+        
+
 
         if (winline == "[WINDOWS]"){ // CHECK IF CURRENTLY IN OS SECTION AND WHICH OS IT IS
             os_tag = "windows";
@@ -191,20 +256,23 @@ void read_file(){
         else{
             check_if_var(buffer);
         }
+        cout << '\n';   
 
     }
 
     // Close the file when done
     fclose(file);
 
+
     // chatgpt is our friend :)
 }
 
 
 int main(int argc, char** argv){
-
-    (void) argc;
-    (void) argv;
-    read_file();
+    if (argc == 1){
+        read_file("BUILD", false);
+    }else{
+        read_file(argv[1], true);
+    }
     return 0;
 }
