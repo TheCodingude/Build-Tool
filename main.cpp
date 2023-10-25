@@ -22,36 +22,57 @@ string CHECK_OS(){
 }
 
 void build_error(string error){
-    cerr << "BUILD ERROR: " << error << endl;
+    cerr << "[BUILD ERROR] " << error << endl;
     exit(1);
 }
 
 void build_warning(string warning){
-    cout << "BUILD WARNING: " << warning << endl;
+    cout << "[BUILD WARNING] " << warning << endl;
 } 
 
 void build_info(string info){
     // cout << "----------------" << endl;
-    cout << "[BUILD INFO]: " << info << endl;
+    cout << "[BUILD INFO] " << info << endl;
     // cout << "----------------" << endl;
 }
 
-bool containsOnlyBlanks(const std::string& line) { return std::all_of(line.begin(), line.end(), [](char c) { return c == ' ' || c == '\t' || c == '\n'; }); }
+bool containsOnlyBlanks(const std::string& line) 
+{ 
+    return std::all_of(line.begin(), line.end(), [](char c) { return c == ' ' || c == '\t' || c == '\n'; });  // i have no idea what the fuck this does
+}
 
 inline bool ends_with(std::string const & value, std::string const & ending){
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
+void write_to_file(string filename, string text){
+	FILE *f = fopen(filename.c_str(), "a");
+	fprintf(f, text.c_str());
+	fclose(f);
+}
 
-void execute_command(const char* command){
-    if (!containsOnlyBlanks(command)){
-        string c = command;
-        build_info("Running " + c);
-    }
-    if(system(command) != 0){
-        cerr << "Unable to run command: " << command << endl; 
-    } 
+
+void execute_command(const char* command, string output){
+
+    string c = command;
+	const char* out = output.c_str();
+	if(output == "stdout"){	
+		if (!containsOnlyBlanks(command)){
+			build_info("Running " + c);
+		}
+		if(system(command) != 0){
+			build_error("Unable to run command: " + c);
+		} 
+	} else{
+		string com = c + " >> " + output;
+		if (!containsOnlyBlanks(com)){
+			write_to_file(output, "[BUILD INFO] running " + c + '\n');
+		}
+		if(system(com.c_str()) != 0){
+			write_to_file(output, "[BUILD ERROR] unable to run command " + c + '\n');
+		}
+	}
 }
 
 string removeWhitespace(string input) {
@@ -115,7 +136,7 @@ void find_var(string line, int loe){ // loe = location of equals
     variables[name] = data;
 }
 
-void check_if_var(string line){
+string check_if_var(string line){
     string newline = "";
     bool found = false;
     bool already_found = false;
@@ -139,9 +160,7 @@ void check_if_var(string line){
         }
     }
     
-    
-    execute_command(newline.c_str());
-
+	return newline;
 
 }
 
@@ -160,6 +179,7 @@ void read_file(const char* filename = "BUILD", bool look = false){
 
     string flag = "nah fam";
     FILE *file;
+    string output = "stdout";
 
     if (look){
         flag = check_for_flags(filename);
@@ -221,7 +241,7 @@ void read_file(const char* filename = "BUILD", bool look = false){
             if(!in_section){
                 continue;
             }
-        }else if(ends_with(line, ":\n")){       // proably not the best way to do this but if it aint broke dont fix it
+        }else if(ends_with(line, ":\n") || ends_with(line, ":")){       // proably not the best way to do this but if it aint broke dont fix it
             exit(0);
         }
 
@@ -245,18 +265,26 @@ void read_file(const char* filename = "BUILD", bool look = false){
         }
         else if (os_tag != "none"){
             if(os_tag == os){
-                
-                check_if_var(buffer);
-            }
+                string com = check_if_var(buffer);
+				execute_command(com.c_str(), output);
+			}
             else{
                 continue;
             }
             
         }
         else{
-            check_if_var(buffer);
-        }
-        cout << '\n';   
+            vector<string> tokens = split(line, ' ');
+            if (tokens[0] == "OUTPUT"){
+                output = tokens[1];
+				FILE *f = fopen(output.c_str(), "w");
+				fprintf(f, "");
+				fclose(f);
+            }else{
+				string com = check_if_var(buffer);
+				execute_command(com.c_str(), output);
+			}
+		}
 
     }
 
