@@ -48,7 +48,13 @@ echo this will only run on linux :D
 
 [MAC]
 
-echo this will only work on Mac Os :|
+echo this will only run on Mac Os :|
+```
+
+ability to save all output to a file with the OUTPUT keyword like this:
+
+```shell
+output [FILENAME]
 ```
 
 
